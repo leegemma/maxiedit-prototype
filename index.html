@@ -6,7 +6,7 @@
   <title>MaxiEdit</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&family=Nanum+Myeongjo:wght@700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&family=Nanum+Pen+Script&family=Inter:wght@400;500;600;700&family=Noto+Sans+KR:wght@400;500;700&family=Nanum+Myeongjo:wght@700;800&display=swap" rel="stylesheet" />
   <!-- Bundled locally so corporate SSL interception (e.g. Somansa) and
        offline starts can't break the app. Sources at lib/, copied into
        www/lib/ by sync:www. ffmpeg.wasm stays on jsDelivr because of
@@ -1670,6 +1670,172 @@
       100% { transform: scale(1); }
     }
     .home-card--pulse { animation: card-pulse 0.32s var(--ease-out-soft); }
+
+    /* === 테두리 그리기 home card === */
+    .home-card.is-outline {
+      background: #0d0d0d;
+      border: 1px solid rgba(255, 251, 138, 0.25);
+      color: #fffb8a;
+    }
+    .home-card.is-outline:active { opacity: 0.85; }
+    .home-card-deco-stars {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      overflow: hidden;
+    }
+    .home-card-deco-stars span {
+      position: absolute;
+      font-size: 14px;
+      opacity: 0.55;
+      color: #fffb8a;
+    }
+
+    /* === 테두리 그리기 page === */
+    #page-outline {
+      display: flex;
+      flex-direction: column;
+    }
+    .outline-header {
+      position: relative;
+      height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 12px;
+      flex-shrink: 0;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    .outline-header-title {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 11px;
+      letter-spacing: 0.26em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.88);
+      font-weight: 400;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    .btn-outline-export {
+      height: 32px; padding: 0 14px;
+      background: #fffb8a; color: #111;
+      border: none; border-radius: 4px;
+      font-family: inherit; font-size: 11px;
+      letter-spacing: 0.14em; font-weight: 600; cursor: pointer;
+    }
+    .btn-outline-export:active { opacity: 0.85; }
+    .outline-canvas-wrap {
+      flex: 1 1 auto; min-height: 0; position: relative;
+      display: flex; align-items: center; justify-content: center;
+      background: #111; overflow: hidden;
+    }
+    #outline-canvas { display: block; max-width: 100%; max-height: 100%; }
+    .outline-loading {
+      position: absolute; inset: 0;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      background: rgba(0,0,0,0.72); gap: 14px; z-index: 10;
+    }
+    .outline-loading-spinner {
+      width: 28px; height: 28px;
+      border: 2px solid rgba(255,255,255,0.18);
+      border-top-color: #fff; border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .outline-loading-text { font-size: 11px; letter-spacing: 0.2em; color: rgba(255,255,255,0.65); }
+    .outline-toolbar { flex-shrink: 0; background: #080808; border-top: 1px solid rgba(255,255,255,0.08); }
+    .outline-tabs { display: flex; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .outline-tab {
+      flex: 1; height: 38px; background: transparent;
+      border: none; border-bottom: 1px solid transparent; margin-bottom: -1px;
+      color: rgba(255,255,255,0.4); font-family: inherit;
+      font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; cursor: pointer;
+    }
+    .outline-tab.is-active { color: #fff; border-bottom-color: #fff; }
+    .outline-panel { padding: 12px 16px 14px; min-height: 110px; overflow-y: auto; }
+    .outline-section-label {
+      font-size: 9px; letter-spacing: 0.24em; text-transform: uppercase;
+      color: rgba(255,255,255,0.35); margin-bottom: 8px;
+    }
+    .outline-person-wrap { margin-bottom: 10px; }
+    .outline-person-select { display: flex; gap: 5px; flex-wrap: wrap; }
+    .btn-person-toggle {
+      height: 24px; padding: 0 9px; background: transparent;
+      border: 1px solid rgba(255,255,255,0.22); border-radius: 4px;
+      color: rgba(255,255,255,0.5); font-family: inherit;
+      font-size: 10px; letter-spacing: 0.1em; cursor: pointer;
+    }
+    .btn-person-toggle.is-active { border-color: #fff; color: #fff; background: rgba(255,255,255,0.07); }
+    .outline-style-row { display: flex; gap: 8px; margin-bottom: 10px; }
+    .btn-line-style {
+      flex: 1; height: 34px; background: transparent;
+      border: 1px solid rgba(255,255,255,0.18); border-radius: 4px;
+      color: rgba(255,255,255,0.5); font-family: inherit;
+      font-size: 10px; letter-spacing: 0.12em; cursor: pointer;
+      display: flex; align-items: center; justify-content: center; gap: 7px;
+    }
+    .btn-line-style.is-active { border-color: #fff; color: #fff; background: rgba(255,255,255,0.07); }
+    .line-prev-solid { width: 24px; height: 2px; background: currentColor; border-radius: 1px; }
+    .line-prev-dashed { width: 24px; height: 2px; background: repeating-linear-gradient(90deg,currentColor 0,currentColor 5px,transparent 5px,transparent 9px); }
+    .outline-colors { display: flex; gap: 7px; align-items: center; flex-wrap: wrap; }
+    .color-swatch {
+      width: 22px; height: 22px; border-radius: 50%;
+      border: 2px solid transparent; cursor: pointer; flex-shrink: 0;
+      transition: transform 0.1s ease, border-color 0.1s ease;
+    }
+    .color-swatch.is-active { border-color: #fff; transform: scale(1.18); }
+    .color-swatch-rainbow {
+      background: conic-gradient(red, yellow, lime, cyan, blue, magenta, red);
+      position: relative; overflow: hidden;
+    }
+    .color-swatch-rainbow input[type=color] {
+      position: absolute; inset: 0; opacity: 0;
+      cursor: pointer; width: 100%; height: 100%;
+    }
+    .outline-slider-row { display: flex; align-items: center; gap: 10px; }
+    .outline-slider-label { font-size: 10px; color: rgba(255,255,255,0.4); min-width: 16px; text-align: center; }
+    .outline-slider {
+      flex: 1; -webkit-appearance: none;
+      height: 2px; border-radius: 1px;
+      background: rgba(255,255,255,0.18); outline: none; cursor: pointer;
+    }
+    .outline-slider::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 14px; height: 14px;
+      border-radius: 50%; background: #fff; cursor: pointer;
+    }
+    .outline-slider-val { font-size: 11px; color: rgba(255,255,255,0.55); min-width: 22px; text-align: right; }
+    .btn-deco-re {
+      margin-top: 10px; height: 30px; padding: 0 12px;
+      background: transparent; border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 4px; color: rgba(255,255,255,0.55);
+      font-family: inherit; font-size: 10px; letter-spacing: 0.12em; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
+    .btn-deco-re:active { background: rgba(255,255,255,0.06); }
+    .outline-text-hint { font-size: 10px; letter-spacing: 0.12em; color: rgba(255,255,255,0.3); margin-bottom: 10px; }
+    .outline-font-row { display: flex; gap: 5px; flex-wrap: wrap; margin-bottom: 8px; }
+    .btn-font-choice {
+      height: 28px; padding: 0 10px; background: transparent;
+      border: 1px solid rgba(255,255,255,0.2); border-radius: 4px;
+      color: rgba(255,255,255,0.55); font-size: 13px; cursor: pointer;
+    }
+    .btn-font-choice.is-active { border-color: #fff; color: #fff; background: rgba(255,255,255,0.07); }
+    .outline-text-items { display: flex; flex-direction: column; gap: 4px; }
+    .outline-text-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 4px 8px; background: rgba(255,255,255,0.05); border-radius: 3px;
+    }
+    .outline-text-item-label {
+      flex: 1; font-size: 12px; color: rgba(255,255,255,0.65);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .btn-text-item-del {
+      background: none; border: none; color: rgba(255,255,255,0.35);
+      font-size: 15px; line-height: 1; cursor: pointer; flex-shrink: 0; padding: 2px 4px;
+    }
   </style>
 </head>
 <body>
@@ -1699,6 +1865,15 @@
             <span class="home-card-overlay" aria-hidden="true"></span>
             <span class="home-badge is-new">New</span>
             <span class="home-card-title">3x3 그리드 캐러셀</span>
+          </button>
+          <button class="home-card is-outline" type="button" id="btn-outline-entry" data-name="card_outline">
+            <div class="home-card-deco-stars" aria-hidden="true">
+              <span style="left:8%;top:18%">✦</span><span style="left:82%;top:12%">✦</span>
+              <span style="left:55%;top:22%">✦</span><span style="left:20%;top:70%">✦</span>
+              <span style="left:75%;top:65%">✦</span><span style="left:40%;top:14%">✦</span>
+            </div>
+            <span class="home-badge is-new">New</span>
+            <span class="home-card-title">테두리 그리기</span>
           </button>
           <h2 class="home-section-title home-section-title--inline">ig 피드 만들기</h2>
           <button class="home-card is-disabled" type="button" aria-disabled="true" data-name="card_feed_crop">
@@ -1908,6 +2083,82 @@
       <button class="btn-progress-cancel" type="button" id="btn-progress-cancel">취소</button>
     </div>
   </div>
+  <!-- 테두리 그리기 page -->
+  <section class="page" id="page-outline" hidden>
+    <input type="file" id="outline-photo-input" accept="image/*" style="display:none">
+    <header class="outline-header">
+      <button class="btn-icon" id="btn-outline-back" type="button" aria-label="뒤로">
+        <svg viewBox="0 0 24 24" aria-hidden="true" stroke-width="1.6"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <span class="outline-header-title">테두리 그리기</span>
+      <button class="btn-outline-export" id="btn-outline-export" type="button">내보내기</button>
+    </header>
+    <div class="outline-canvas-wrap" id="outline-canvas-wrap">
+      <canvas id="outline-canvas"></canvas>
+      <div class="outline-loading" id="outline-loading" hidden>
+        <div class="outline-loading-spinner"></div>
+        <span class="outline-loading-text">인물 감지 중...</span>
+      </div>
+    </div>
+    <div class="outline-toolbar">
+      <div class="outline-tabs">
+        <button class="outline-tab is-active" type="button" data-tab="border">테두리</button>
+        <button class="outline-tab" type="button" data-tab="deco">데코</button>
+        <button class="outline-tab" type="button" data-tab="text">텍스트</button>
+      </div>
+      <div class="outline-panel" id="outline-panel-border">
+        <div class="outline-person-wrap" id="outline-person-wrap" hidden>
+          <p class="outline-section-label">인물 선택</p>
+          <div class="outline-person-select" id="outline-person-select"></div>
+        </div>
+        <p class="outline-section-label">선 스타일</p>
+        <div class="outline-style-row">
+          <button class="btn-line-style is-active" type="button" data-style="solid">
+            <div class="line-prev-solid"></div>손그림 실선
+          </button>
+          <button class="btn-line-style" type="button" data-style="dashed">
+            <div class="line-prev-dashed"></div>손그림 점선
+          </button>
+        </div>
+        <p class="outline-section-label">색상</p>
+        <div class="outline-colors" id="outline-colors">
+          <div class="color-swatch is-active" data-color="#FFE600" style="background:#FFE600"></div>
+          <div class="color-swatch" data-color="#FFFFFF" style="background:#FFFFFF"></div>
+          <div class="color-swatch" data-color="#FF3B3B" style="background:#FF3B3B"></div>
+          <div class="color-swatch" data-color="#5B8CFF" style="background:#5B8CFF"></div>
+          <div class="color-swatch" data-color="#FF9F0A" style="background:#FF9F0A"></div>
+          <div class="color-swatch" data-color="#6FE08B" style="background:#6FE08B"></div>
+          <div class="color-swatch" data-color="#000000" style="background:#111;border-color:rgba(255,255,255,0.25)"></div>
+          <div class="color-swatch color-swatch-rainbow" data-color="custom" title="커스텀 색상">
+            <input type="color" id="outline-color-picker" value="#FFE600" aria-label="커스텀 색상">
+          </div>
+        </div>
+      </div>
+      <div class="outline-panel" id="outline-panel-deco" hidden>
+        <p class="outline-section-label">별 개수</p>
+        <div class="outline-slider-row">
+          <span class="outline-slider-label">0</span>
+          <input type="range" class="outline-slider" id="outline-star-count" min="0" max="30" value="12">
+          <span class="outline-slider-label">30</span>
+          <span class="outline-slider-val" id="outline-star-val">12</span>
+        </div>
+        <button class="btn-deco-re" type="button" id="btn-stars-randomize">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+          다시 배치
+        </button>
+      </div>
+      <div class="outline-panel" id="outline-panel-text" hidden>
+        <p class="outline-text-hint">캔버스를 탭하여 텍스트 추가</p>
+        <p class="outline-section-label">폰트</p>
+        <div class="outline-font-row" id="outline-font-row">
+          <button class="btn-font-choice is-active" type="button" data-font="Caveat" style="font-family:'Caveat',cursive">Aa</button>
+          <button class="btn-font-choice" type="button" data-font="Nanum Pen Script" style="font-family:'Nanum Pen Script',cursive">Aa</button>
+        </div>
+        <div class="outline-text-items" id="outline-text-items"></div>
+      </div>
+    </div>
+  </section>
+
   <div class="loading-bar" id="loading-bar" hidden></div>
   <div class="toast" id="toast" role="status" aria-live="polite" hidden>
     <svg class="toast-check" viewBox="0 0 24 24" aria-hidden="true">
@@ -2808,7 +3059,8 @@
     });
 
     // Page navigation — only one page visible at a time.
-    const pages = { home: pageHome, edit: pageEdit, result: pageResult, single: pageSingle };
+    const pageOutline = document.getElementById('page-outline');
+    const pages = { home: pageHome, edit: pageEdit, result: pageResult, single: pageSingle, outline: pageOutline };
     const bottomLayerSelectEl = document.querySelector('#page-edit .bottom-layer-select');
     let currentPage = 'home';
 
@@ -2913,6 +3165,7 @@
     };
 
     btnStart.addEventListener('click', () => goTo('edit'));
+    document.getElementById('btn-outline-entry').addEventListener('click', () => enterOutlinePage());
 
     // 00_home — tab toggle (홈 / 준비중). Toss-shopping-tab carousel:
     // both sections live in #home-tab-track and the track translates between
@@ -4212,6 +4465,458 @@
         }
       });
     }
+
+    // ============================================================
+    // 테두리 그리기 feature
+    // ============================================================
+
+    let outlineCanvas, outlineCtx;
+    const outlineState = {
+      img: null, imgW: 0, imgH: 0,
+      masks: [], maskW: 0, maskH: 0,
+      contourCache: null,
+      selectedPersons: [],
+      lineStyle: 'solid',
+      lineColor: '#FFE600',
+      stars: [], starCount: 12,
+      textItems: [],
+      activeFont: 'Caveat',
+      activeTextColor: '#FFE600',
+      currentTab: 'border',
+      canvasScale: 1,
+      showGuidelines: false,
+    };
+    let bodyPixNet = null;
+
+    function loadScriptTag(src) {
+      return new Promise((resolve, reject) => {
+        if (document.querySelector(`script[src="${src}"]`)) { resolve(); return; }
+        const s = document.createElement('script');
+        s.src = src; s.onload = resolve;
+        s.onerror = () => reject(new Error(`Script load failed: ${src}`));
+        document.head.appendChild(s);
+      });
+    }
+
+    async function getBodyPix() {
+      if (bodyPixNet) return bodyPixNet;
+      await loadScriptTag('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.11.0/dist/tf.min.js');
+      await loadScriptTag('https://cdn.jsdelivr.net/npm/@tensorflow-models/body-pix@2.2.0/dist/body-pix.min.js');
+      bodyPixNet = await window.bodyPix.load({
+        architecture: 'MobileNetV1', outputStride: 16,
+        multiplier: 0.75, quantBytes: 2,
+      });
+      return bodyPixNet;
+    }
+
+    function initOutlineFeature() {
+      outlineCanvas = document.getElementById('outline-canvas');
+      outlineCtx = outlineCanvas.getContext('2d');
+      const wrap = document.getElementById('outline-canvas-wrap');
+
+      document.querySelectorAll('.outline-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          const t = tab.dataset.tab;
+          document.querySelectorAll('.outline-tab').forEach(b => b.classList.toggle('is-active', b === tab));
+          ['border', 'deco', 'text'].forEach(n => {
+            document.getElementById(`outline-panel-${n}`).hidden = (n !== t);
+          });
+          outlineState.currentTab = t;
+          outlineCanvas.style.cursor = t === 'text' ? 'crosshair' : 'default';
+        });
+      });
+
+      document.getElementById('btn-outline-back').addEventListener('click', () => goTo('home'));
+      document.getElementById('btn-outline-export').addEventListener('click', outlineExport);
+
+      document.querySelectorAll('.btn-line-style[data-style]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          outlineState.lineStyle = btn.dataset.style;
+          document.querySelectorAll('.btn-line-style[data-style]').forEach(b =>
+            b.classList.toggle('is-active', b === btn));
+          renderOutline();
+        });
+      });
+
+      document.querySelectorAll('#outline-colors .color-swatch[data-color]').forEach(sw => {
+        sw.addEventListener('click', () => {
+          const c = sw.dataset.color;
+          if (c === 'custom') return;
+          outlineState.lineColor = c;
+          outlineState.activeTextColor = c;
+          document.querySelectorAll('#outline-colors .color-swatch').forEach(s =>
+            s.classList.toggle('is-active', s === sw));
+          renderOutline();
+        });
+      });
+      document.getElementById('outline-color-picker').addEventListener('input', e => {
+        outlineState.lineColor = e.target.value;
+        outlineState.activeTextColor = e.target.value;
+        document.querySelectorAll('#outline-colors .color-swatch').forEach(s => s.classList.remove('is-active'));
+        e.target.closest('.color-swatch').classList.add('is-active');
+        renderOutline();
+      });
+
+      const starSlider = document.getElementById('outline-star-count');
+      const starValEl = document.getElementById('outline-star-val');
+      starSlider.addEventListener('input', () => {
+        outlineState.starCount = +starSlider.value;
+        starValEl.textContent = outlineState.starCount;
+        genStarPositions();
+        renderOutline();
+      });
+      document.getElementById('btn-stars-randomize').addEventListener('click', () => {
+        genStarPositions(); renderOutline();
+      });
+
+      document.querySelectorAll('#outline-font-row .btn-font-choice').forEach(btn => {
+        btn.addEventListener('click', () => {
+          outlineState.activeFont = btn.dataset.font;
+          document.querySelectorAll('#outline-font-row .btn-font-choice').forEach(b =>
+            b.classList.toggle('is-active', b === btn));
+          renderOutline();
+        });
+      });
+
+      outlineCanvas.addEventListener('click', e => {
+        if (outlineState.currentTab !== 'text' || !outlineState.img) return;
+        const r = outlineCanvas.getBoundingClientRect();
+        const x = (e.clientX - r.left) / outlineState.canvasScale;
+        const y = (e.clientY - r.top) / outlineState.canvasScale;
+        startOutlineTextInput(x, y, wrap);
+      });
+
+      document.getElementById('outline-photo-input').addEventListener('change', e => {
+        const f = e.target.files[0];
+        e.target.value = '';
+        if (f) loadOutlineFile(f);
+      });
+    }
+
+    function enterOutlinePage() {
+      Object.assign(outlineState, {
+        img: null, imgW: 0, imgH: 0,
+        masks: [], maskW: 0, maskH: 0, contourCache: null,
+        selectedPersons: [], stars: [], textItems: [],
+        lineStyle: 'solid', lineColor: '#FFE600', activeTextColor: '#FFE600',
+        activeFont: 'Caveat', currentTab: 'border', canvasScale: 1, showGuidelines: false,
+      });
+      if (outlineCtx) outlineCtx.clearRect(0, 0, outlineCanvas.width, outlineCanvas.height);
+      document.getElementById('outline-person-wrap').hidden = true;
+      document.getElementById('outline-text-items').innerHTML = '';
+      document.getElementById('outline-loading').hidden = true;
+      document.querySelectorAll('.outline-tab').forEach(b => b.classList.toggle('is-active', b.dataset.tab === 'border'));
+      ['border', 'deco', 'text'].forEach(n => { document.getElementById(`outline-panel-${n}`).hidden = n !== 'border'; });
+      document.querySelectorAll('.btn-line-style[data-style]').forEach(b => b.classList.toggle('is-active', b.dataset.style === 'solid'));
+      document.querySelectorAll('#outline-colors .color-swatch').forEach((s, i) => s.classList.toggle('is-active', i === 0));
+      document.getElementById('outline-star-count').value = 12;
+      document.getElementById('outline-star-val').textContent = '12';
+      goTo('outline');
+      document.getElementById('outline-photo-input').click();
+    }
+
+    async function loadOutlineFile(file) {
+      const url = URL.createObjectURL(file);
+      const img = new Image();
+      img.onload = async () => {
+        URL.revokeObjectURL(url);
+        outlineState.img = img;
+        outlineState.imgW = img.naturalWidth;
+        outlineState.imgH = img.naturalHeight;
+        setupOutlineCanvas();
+        renderOutline();
+        await runOutlineSegmentation(img);
+      };
+      img.onerror = () => URL.revokeObjectURL(url);
+      img.src = url;
+    }
+
+    function setupOutlineCanvas() {
+      const wrap = document.getElementById('outline-canvas-wrap');
+      const maxW = wrap.clientWidth || 393;
+      const maxH = wrap.clientHeight || 460;
+      const { imgW, imgH } = outlineState;
+      const scale = Math.min(maxW / imgW, maxH / imgH, 1);
+      outlineCanvas.width = imgW;
+      outlineCanvas.height = imgH;
+      outlineCanvas.style.width = `${Math.round(imgW * scale)}px`;
+      outlineCanvas.style.height = `${Math.round(imgH * scale)}px`;
+      outlineState.canvasScale = scale;
+    }
+
+    async function runOutlineSegmentation(img) {
+      const loadingEl = document.getElementById('outline-loading');
+      loadingEl.hidden = false;
+      try {
+        const net = await getBodyPix();
+        if (!net) { showToast('인물 감지 모델 로드 실패', { showIcon: false }); return; }
+        const result = await net.segmentMultiPerson(img, {
+          flipHorizontal: false,
+          internalResolution: 'medium',
+          segmentationThreshold: 0.6,
+          maxDetections: 5,
+          scoreThreshold: 0.2,
+          nmsRadius: 20,
+        });
+        const valid = result.filter(r => r.score > 0.3 && r.data.some(v => v));
+        outlineState.masks = valid.map(r => r.data);
+        outlineState.maskW = valid[0]?.width || img.naturalWidth;
+        outlineState.maskH = valid[0]?.height || img.naturalHeight;
+        outlineState.selectedPersons = outlineState.masks.map((_, i) => i);
+        outlineState.contourCache = null;
+        updateOutlinePersonToggles();
+        genStarPositions();
+        outlineState.showGuidelines = true;
+        renderOutline();
+        setTimeout(() => { outlineState.showGuidelines = false; renderOutline(); }, 1600);
+      } catch (err) {
+        console.error('BodyPix error', err);
+        showToast('인물 감지 실패 — 이미지 전체에 테두리를 적용합니다.', { showIcon: false });
+      } finally {
+        loadingEl.hidden = true;
+      }
+    }
+
+    function updateOutlinePersonToggles() {
+      const wrap = document.getElementById('outline-person-wrap');
+      const container = document.getElementById('outline-person-select');
+      const n = outlineState.masks.length;
+      if (n <= 1) { wrap.hidden = true; return; }
+      wrap.hidden = false;
+      container.innerHTML = '';
+      const mkBtn = (label, idx) => {
+        const btn = document.createElement('button');
+        btn.type = 'button'; btn.className = 'btn-person-toggle is-active';
+        btn.textContent = label; btn.dataset.idx = idx;
+        btn.addEventListener('click', () => {
+          if (idx === 'all') {
+            const allOn = outlineState.selectedPersons.length === outlineState.masks.length;
+            outlineState.selectedPersons = allOn ? [] : outlineState.masks.map((_, i) => i);
+          } else {
+            const ni = parseInt(idx, 10);
+            const pos = outlineState.selectedPersons.indexOf(ni);
+            if (pos !== -1) outlineState.selectedPersons.splice(pos, 1);
+            else outlineState.selectedPersons.push(ni);
+          }
+          const allSel = outlineState.selectedPersons.length === outlineState.masks.length;
+          container.querySelectorAll('.btn-person-toggle').forEach(b => {
+            b.classList.toggle('is-active',
+              b.dataset.idx === 'all' ? allSel : outlineState.selectedPersons.includes(parseInt(b.dataset.idx, 10)));
+          });
+          renderOutline();
+        });
+        return btn;
+      };
+      container.appendChild(mkBtn('전체', 'all'));
+      for (let i = 0; i < n; i++) container.appendChild(mkBtn(`인물 ${i + 1}`, String(i)));
+    }
+
+    function renderOutline() {
+      if (!outlineCtx || !outlineState.img) return;
+      const ctx = outlineCtx;
+      const { imgW, imgH, img, masks, maskW, maskH,
+              selectedPersons, lineStyle, lineColor, stars, textItems, showGuidelines } = outlineState;
+      ctx.clearRect(0, 0, imgW, imgH);
+      ctx.drawImage(img, 0, 0, imgW, imgH);
+      if (masks.length > 0) {
+        if (!outlineState.contourCache) {
+          outlineState.contourCache = masks.map(mask =>
+            buildContourPts(mask, maskW, maskH, imgW, imgH, 4));
+        }
+        if (showGuidelines) {
+          masks.forEach((_, i) => drawGuidelinePts(ctx, outlineState.contourCache[i], i));
+        }
+        const targets = selectedPersons.length > 0 ? selectedPersons : masks.map((_, i) => i);
+        targets.forEach(i => {
+          if (outlineState.contourCache[i]) {
+            drawOutlinePts(ctx, outlineState.contourCache[i], lineColor, lineStyle, imgW);
+          }
+        });
+      }
+      if (stars.length) drawOutlineStars(ctx, stars, lineColor);
+      if (textItems.length) drawOutlineTexts(ctx, textItems);
+    }
+
+    function buildContourPts(mask, mW, mH, cW, cH, jitter) {
+      const sx = cW / mW, sy = cH / mH;
+      const leftEdge = [], rightEdge = [];
+      for (let y = 0; y < mH; y++) {
+        let l = -1, r = -1;
+        for (let x = 0; x < mW; x++) {
+          if (mask[y * mW + x]) { if (l < 0) l = x; r = x; }
+        }
+        if (l >= 0) {
+          leftEdge.push([l, y]);
+          if (r > l) rightEdge.unshift([r, y]);
+        }
+      }
+      if (!leftEdge.length) return [];
+      const raw = [...leftEdge, ...rightEdge];
+      const step = Math.max(1, Math.ceil(raw.length / 110));
+      const pts = [];
+      for (let i = 0; i < raw.length; i += step) {
+        const [x, y] = raw[i];
+        const jx = jitter ? (Math.random() - 0.5) * jitter * 2 : 0;
+        const jy = jitter ? (Math.random() - 0.5) * jitter * 2 : 0;
+        pts.push([(x + jx) * sx, (y + jy) * sy]);
+      }
+      return pts;
+    }
+
+    function pathFromPts(ctx, pts) {
+      if (pts.length < 3) return;
+      ctx.beginPath();
+      ctx.moveTo(pts[0][0], pts[0][1]);
+      for (let i = 1; i < pts.length - 1; i++) {
+        const mx = (pts[i][0] + pts[i + 1][0]) / 2;
+        const my = (pts[i][1] + pts[i + 1][1]) / 2;
+        ctx.quadraticCurveTo(pts[i][0], pts[i][1], mx, my);
+      }
+      ctx.closePath();
+    }
+
+    function drawGuidelinePts(ctx, pts, idx) {
+      if (!pts || !pts.length) return;
+      ctx.save();
+      ctx.globalAlpha = 0.5;
+      ctx.strokeStyle = `hsl(${(idx * 137) % 360},90%,65%)`;
+      ctx.lineWidth = 1.5; ctx.setLineDash([5, 5]);
+      ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+      pathFromPts(ctx, pts); ctx.stroke();
+      ctx.setLineDash([]); ctx.restore();
+    }
+
+    function drawOutlinePts(ctx, pts, color, style, imgW) {
+      if (!pts || !pts.length) return;
+      const lw = Math.max(2.5, imgW * 0.008);
+      ctx.save();
+      ctx.strokeStyle = color; ctx.lineWidth = lw;
+      ctx.lineJoin = 'round'; ctx.lineCap = 'round';
+      if (style === 'dashed') ctx.setLineDash([lw * 4, lw * 2.5]);
+      pathFromPts(ctx, pts); ctx.stroke();
+      ctx.globalAlpha = 0.28; ctx.lineWidth = lw * 1.8;
+      ctx.setLineDash([]);
+      pathFromPts(ctx, pts); ctx.stroke();
+      ctx.restore();
+    }
+
+    function genStarPositions() {
+      const { imgW, imgH, starCount } = outlineState;
+      const stars = [];
+      for (let i = 0; i < starCount; i++) {
+        const r = Math.random();
+        let x, y;
+        if (r < 0.28) { x = Math.random() * imgW; y = Math.random() * imgH * 0.22; }
+        else if (r < 0.48) { x = Math.random() * imgW; y = imgH * 0.78 + Math.random() * imgH * 0.22; }
+        else if (r < 0.62) { x = Math.random() * imgW * 0.18; y = Math.random() * imgH; }
+        else if (r < 0.76) { x = imgW * 0.82 + Math.random() * imgW * 0.18; y = Math.random() * imgH; }
+        else { x = imgW * 0.1 + Math.random() * imgW * 0.8; y = imgH * 0.1 + Math.random() * imgH * 0.8; }
+        const size = imgW * (0.007 + Math.random() * 0.018);
+        stars.push({ x, y, size, rot: Math.random() * Math.PI * 2 });
+      }
+      outlineState.stars = stars;
+    }
+
+    function drawOutlineStars(ctx, stars, color) {
+      ctx.save(); ctx.fillStyle = color;
+      for (const { x, y, size, rot } of stars) {
+        ctx.beginPath();
+        for (let i = 0; i < 8; i++) {
+          const a = (i * Math.PI / 4) + rot;
+          const r2 = i % 2 === 0 ? size : size * 0.22;
+          const px = x + Math.cos(a) * r2;
+          const py = y + Math.sin(a) * r2;
+          if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+        }
+        ctx.closePath(); ctx.fill();
+      }
+      ctx.restore();
+    }
+
+    function startOutlineTextInput(imgX, imgY, wrap) {
+      const fs = Math.round(outlineState.imgW * 0.044 * outlineState.canvasScale);
+      const canvasRect = outlineCanvas.getBoundingClientRect();
+      const wrapRect = wrap.getBoundingClientRect();
+      const inp = document.createElement('input');
+      inp.type = 'text'; inp.placeholder = '입력 후 Enter';
+      inp.autocomplete = 'off'; inp.autocorrect = 'off';
+      inp.autocapitalize = 'off'; inp.spellcheck = false;
+      inp.style.cssText = [
+        'position:absolute', 'z-index:200',
+        `left:${Math.round(canvasRect.left - wrapRect.left + imgX * outlineState.canvasScale)}px`,
+        `top:${Math.round(canvasRect.top - wrapRect.top + imgY * outlineState.canvasScale - fs - 4)}px`,
+        'min-width:120px', 'max-width:240px',
+        'background:rgba(0,0,0,0.68)',
+        `color:${outlineState.activeTextColor}`,
+        `border:1px solid ${outlineState.activeTextColor}`,
+        'border-radius:3px', 'padding:3px 8px', 'outline:none',
+        `font-family:'${outlineState.activeFont}',cursive`, `font-size:${fs}px`,
+      ].join(';');
+      wrap.style.position = 'relative';
+      wrap.appendChild(inp); inp.focus();
+      let committed = false;
+      const commit = () => {
+        if (committed) return; committed = true;
+        const text = inp.value.trim();
+        if (text) {
+          outlineState.textItems.push({
+            x: imgX, y: imgY, text,
+            font: outlineState.activeFont,
+            color: outlineState.activeTextColor,
+            fontSize: Math.round(outlineState.imgW * 0.044),
+          });
+          updateOutlineTextList(); renderOutline();
+        }
+        if (inp.parentNode) inp.parentNode.removeChild(inp);
+      };
+      inp.addEventListener('keydown', e => {
+        if (e.key === 'Enter') { e.preventDefault(); commit(); }
+        else if (e.key === 'Escape') { committed = true; if (inp.parentNode) inp.parentNode.removeChild(inp); }
+      });
+      inp.addEventListener('blur', () => setTimeout(commit, 80));
+    }
+
+    function updateOutlineTextList() {
+      const el = document.getElementById('outline-text-items');
+      el.innerHTML = '';
+      outlineState.textItems.forEach((item, i) => {
+        const row = document.createElement('div');
+        row.className = 'outline-text-item';
+        const lbl = document.createElement('span');
+        lbl.className = 'outline-text-item-label';
+        lbl.textContent = item.text;
+        lbl.style.fontFamily = `'${item.font}', cursive`;
+        const del = document.createElement('button');
+        del.type = 'button'; del.className = 'btn-text-item-del'; del.textContent = '×';
+        del.addEventListener('click', () => {
+          outlineState.textItems.splice(i, 1);
+          updateOutlineTextList(); renderOutline();
+        });
+        row.append(lbl, del); el.appendChild(row);
+      });
+    }
+
+    function drawOutlineTexts(ctx, items) {
+      for (const { x, y, text, font, color, fontSize } of items) {
+        ctx.save();
+        ctx.font = `${fontSize}px '${font}', cursive`;
+        ctx.fillStyle = color;
+        ctx.shadowColor = 'rgba(0,0,0,0.55)';
+        ctx.shadowBlur = 5; ctx.shadowOffsetX = 1; ctx.shadowOffsetY = 1;
+        ctx.fillText(text, x, y); ctx.restore();
+      }
+    }
+
+    async function outlineExport() {
+      if (!outlineState.img) { showToast('이미지가 없습니다.', { showIcon: false }); return; }
+      outlineState.showGuidelines = false;
+      renderOutline();
+      outlineCanvas.toBlob(blob => {
+        if (blob) saveBlob(blob, `maxiedit_outline_${Date.now()}.jpg`);
+      }, 'image/jpeg', 0.95);
+    }
+
+    initOutlineFeature();
   </script>
 </body>
 </html>
