@@ -4877,25 +4877,7 @@
       ctx.lineJoin = 'round'; ctx.lineCap = 'round';
 
       if (style === 'crayon') {
-        // Crayon: 5 overlapping passes with position jitter + broken dashes
-        const d = Math.max(1.5, lw * 0.4);
-        const passes = [
-          { ox: 0,      oy: 0,      a: 0.88, w: 1.0,  dash: [],                 dOff: 0 },
-          { ox: d,      oy: -d*0.6, a: 0.50, w: 0.65, dash: [lw*3.5, lw*1.2],  dOff: 0 },
-          { ox: -d*0.8, oy: d,      a: 0.42, w: 0.75, dash: [lw*4,   lw*0.9],  dOff: lw*2 },
-          { ox: d*0.5,  oy: d*0.8,  a: 0.38, w: 0.55, dash: [lw*2.5, lw*2.5],  dOff: lw*1.2 },
-          { ox: -d,     oy: -d*0.3, a: 0.30, w: 0.85, dash: [lw*5,   lw*0.7],  dOff: lw*3 },
-        ];
-        for (const { ox, oy, a, w, dash, dOff } of passes) {
-          ctx.globalAlpha = a;
-          ctx.lineWidth = lw * w;
-          ctx.setLineDash(dash);
-          ctx.lineDashOffset = dOff;
-          ctx.save(); ctx.translate(ox, oy);
-          pathFromPts(ctx, pts); ctx.stroke();
-          ctx.restore();
-        }
-        ctx.setLineDash([]);
+        drawCrayonTexture(ctx, pts, color, lw);
       } else {
         ctx.lineWidth = lw;
         if (style === 'dashed') ctx.setLineDash([lw * 4, lw * 2.5]);
@@ -4905,6 +4887,68 @@
         pathFromPts(ctx, pts); ctx.stroke();
       }
       ctx.restore();
+    }
+
+    function drawCrayonTexture(ctx, pts, color, lw) {
+      // Real crayon = thousands of tiny pigment particles scattered around the path.
+      // Gaussian distribution perpendicular to stroke → dense center, sparse/rough edges.
+      const strokeW = Math.max(8, lw * 5);   // total spread width
+      const dotR   = Math.max(0.7, lw * 0.16); // individual grain radius
+
+      // Sample the quadratic bezier path at ~5px intervals
+      const sampled = [];
+      const N = pts.length;
+      for (let i = 0; i < N; i++) {
+        const a = pts[i], b = pts[(i + 1) % N], c = pts[(i + 2) % N];
+        const mx = (a[0] + b[0]) / 2, my = (a[1] + b[1]) / 2;
+        const nx = (b[0] + c[0]) / 2, ny = (b[1] + c[1]) / 2;
+        const steps = Math.max(1, Math.ceil(Math.hypot(nx - mx, ny - my) / 5));
+        for (let s = 0; s < steps; s++) {
+          const t = s / steps, tt = 1 - t;
+          sampled.push([tt*tt*mx + 2*tt*t*b[0] + t*t*nx,
+                        tt*tt*my + 2*tt*t*b[1] + t*t*ny]);
+        }
+      }
+      if (!sampled.length) return;
+
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      let batch = 0;
+
+      for (let i = 0; i < sampled.length; i++) {
+        const [cx, cy] = sampled[i];
+        const [nx, ny] = sampled[(i + 1) % sampled.length];
+        const edx = nx - cx, edy = ny - cy;
+        const elen = Math.hypot(edx, edy) || 1;
+        // Perpendicular unit vector
+        const perpX = -edy / elen, perpY = edx / elen;
+
+        // 12–18 particles per sample point
+        const count = 12 + Math.floor(Math.random() * 7);
+        for (let p = 0; p < count; p++) {
+          // Box-Muller: Gaussian spread perpendicular to stroke
+          const u = Math.random() + 1e-10;
+          const gauss = Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * Math.random());
+          const perp  = gauss * strokeW * 0.29;
+          const along = (Math.random() - 0.5) * 6;
+
+          const qx = cx + perpX * perp + (edx / elen) * along;
+          const qy = cy + perpY * perp + (edy / elen) * along;
+          const r  = dotR * (0.4 + Math.random() * 1.3);
+
+          ctx.moveTo(qx + r, qy);
+          ctx.arc(qx, qy, r, 0, 6.283);
+          batch++;
+        }
+
+        if (batch >= 900) {
+          ctx.globalAlpha = 0.42 + Math.random() * 0.46;
+          ctx.fill();
+          ctx.beginPath();
+          batch = 0;
+        }
+      }
+      if (batch > 0) { ctx.globalAlpha = 0.58; ctx.fill(); }
     }
 
     function genStarPositions() {
