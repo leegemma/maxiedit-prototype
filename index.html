@@ -1765,6 +1765,7 @@
       cursor: pointer; -webkit-tap-highlight-color: transparent;
     }
     .btn-outline-erase:active { opacity: 0.65; }
+    .btn-outline-erase.is-active { background: rgba(255,255,255,0.15); border-color: rgba(255,255,255,0.7); color: #fff; }
     .outline-toolbar { flex-shrink: 0; background: #080808; border-top: 1px solid rgba(255,255,255,0.08); }
     .outline-tabs { display: flex; border-bottom: 1px solid rgba(255,255,255,0.08); }
     .outline-tab {
@@ -4523,6 +4524,9 @@
       currentTab: 'border',
       canvasScale: 1,
       showGuidelines: false,
+      decoCanvas: null,    // offscreen: decorations only
+      eraseCanvas: null,   // offscreen: accumulated erase strokes
+      eraseMode: false,
     };
     let bodyPixNet = null;
 
@@ -4567,18 +4571,36 @@
       document.getElementById('btn-outline-back').addEventListener('click', () => goTo('home'));
       document.getElementById('btn-outline-export').addEventListener('click', outlineExport);
 
-      document.getElementById('btn-outline-erase').addEventListener('click', () => {
-        outlineState.masks = [];
-        outlineState.contourCache = null;
-        outlineState.selectedPersons = [];
-        outlineState.stars = [];
-        outlineState.starCount = 0;
-        document.getElementById('outline-star-count').value = 0;
-        document.getElementById('outline-star-val').textContent = '0';
-        document.getElementById('outline-person-wrap').hidden = true;
-        renderOutline();
-        showToast('지워졌어요', { showIcon: false });
+      const eraseBtn = document.getElementById('btn-outline-erase');
+      eraseBtn.addEventListener('click', () => {
+        outlineState.eraseMode = !outlineState.eraseMode;
+        eraseBtn.classList.toggle('is-active', outlineState.eraseMode);
+        outlineCanvas.style.cursor = outlineState.eraseMode ? 'crosshair' : 'default';
       });
+
+      // Erase drawing via pointer events (throttled with rAF)
+      let erasing = false, eraseRaf = null;
+      const doErase = (e) => {
+        if (!outlineState.eraseCanvas || !outlineState.img) return;
+        const rect = outlineCanvas.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / outlineState.canvasScale;
+        const y = (e.clientY - rect.top) / outlineState.canvasScale;
+        const r = Math.max(18, outlineState.imgW * 0.04);
+        const ec = outlineState.eraseCanvas.getContext('2d');
+        ec.beginPath();
+        ec.arc(x, y, r, 0, 6.283);
+        ec.fill();
+        if (!eraseRaf) eraseRaf = requestAnimationFrame(() => { renderOutline(); eraseRaf = null; });
+      };
+      outlineCanvas.addEventListener('pointerdown', e => {
+        if (!outlineState.eraseMode) return;
+        erasing = true; outlineCanvas.setPointerCapture(e.pointerId); doErase(e);
+      });
+      outlineCanvas.addEventListener('pointermove', e => {
+        if (!outlineState.eraseMode || !erasing) return; doErase(e);
+      });
+      ['pointerup', 'pointercancel'].forEach(t =>
+        outlineCanvas.addEventListener(t, () => { erasing = false; }));
 
       document.querySelectorAll('.btn-line-style[data-style]').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -4651,12 +4673,15 @@
         selectedPersons: [], stars: [], textItems: [],
         lineStyle: 'solid', lineColor: '#FFE600', activeTextColor: '#FFE600',
         activeFont: 'Caveat', currentTab: 'border', canvasScale: 1, showGuidelines: false,
+        decoCanvas: null, eraseCanvas: null, eraseMode: false,
       });
+      if (outlineCanvas) outlineCanvas.style.cursor = 'default';
       if (outlineCtx) outlineCtx.clearRect(0, 0, outlineCanvas.width, outlineCanvas.height);
       document.getElementById('outline-person-wrap').hidden = true;
       document.getElementById('outline-text-items').innerHTML = '';
       document.getElementById('outline-loading').hidden = true;
       document.getElementById('btn-outline-erase').hidden = true;
+      document.getElementById('btn-outline-erase').classList.remove('is-active');
       document.querySelectorAll('.outline-tab').forEach(b => b.classList.toggle('is-active', b.dataset.tab === 'border'));
       ['border', 'deco', 'text'].forEach(n => { document.getElementById(`outline-panel-${n}`).hidden = n !== 'border'; });
       document.querySelectorAll('.btn-line-style[data-style]').forEach(b => b.classList.toggle('is-active', b.dataset.style === 'solid'));
@@ -4700,6 +4725,18 @@
       outlineCanvas.style.width = `${Math.round(imgW * scale)}px`;
       outlineCanvas.style.height = `${Math.round(imgH * scale)}px`;
       outlineState.canvasScale = scale;
+
+      // Offscreen canvases for erase compositing
+      const deco = document.createElement('canvas');
+      deco.width = imgW; deco.height = imgH;
+      outlineState.decoCanvas = deco;
+
+      const erase = document.createElement('canvas');
+      erase.width = imgW; erase.height = imgH;
+      // Fill with black so destination-out erases correctly
+      const ec = erase.getContext('2d');
+      ec.fillStyle = '#000';
+      outlineState.eraseCanvas = erase;
     }
 
     function applyFullImageFallbackMask() {
@@ -4818,28 +4855,45 @@
 
     function renderOutline() {
       if (!outlineCtx || !outlineState.img) return;
-      const ctx = outlineCtx;
       const { imgW, imgH, img, masks, maskW, maskH,
-              selectedPersons, lineStyle, lineColor, stars, textItems, showGuidelines } = outlineState;
-      ctx.clearRect(0, 0, imgW, imgH);
-      ctx.drawImage(img, 0, 0, imgW, imgH);
+              selectedPersons, lineStyle, lineColor, stars, textItems,
+              showGuidelines, decoCanvas, eraseCanvas } = outlineState;
+
+      // 1. Photo on main canvas
+      outlineCtx.clearRect(0, 0, imgW, imgH);
+      outlineCtx.drawImage(img, 0, 0, imgW, imgH);
+      if (!decoCanvas) return;
+
+      // 2. Draw all decorations onto offscreen deco canvas
+      const dCtx = decoCanvas.getContext('2d');
+      dCtx.clearRect(0, 0, imgW, imgH);
       if (masks.length > 0) {
         if (!outlineState.contourCache) {
           outlineState.contourCache = masks.map(mask =>
             buildContourPts(mask, maskW, maskH, imgW, imgH, 4));
         }
         if (showGuidelines) {
-          masks.forEach((_, i) => drawGuidelinePts(ctx, outlineState.contourCache[i], i));
+          masks.forEach((_, i) => drawGuidelinePts(dCtx, outlineState.contourCache[i], i));
         }
         const targets = selectedPersons.length > 0 ? selectedPersons : masks.map((_, i) => i);
         targets.forEach(i => {
           if (outlineState.contourCache[i]) {
-            drawOutlinePts(ctx, outlineState.contourCache[i], lineColor, lineStyle, imgW);
+            drawOutlinePts(dCtx, outlineState.contourCache[i], lineColor, lineStyle, imgW);
           }
         });
       }
-      if (stars.length) drawOutlineStars(ctx, stars, lineColor);
-      if (textItems.length) drawOutlineTexts(ctx, textItems);
+      if (stars.length) drawOutlineStars(dCtx, stars, lineColor);
+      if (textItems.length) drawOutlineTexts(dCtx, textItems);
+
+      // 3. Punch out erased areas using destination-out composite
+      if (eraseCanvas) {
+        dCtx.globalCompositeOperation = 'destination-out';
+        dCtx.drawImage(eraseCanvas, 0, 0);
+        dCtx.globalCompositeOperation = 'source-over';
+      }
+
+      // 4. Composite deco result onto main canvas
+      outlineCtx.drawImage(decoCanvas, 0, 0);
     }
 
     function buildContourPts(mask, mW, mH, cW, cH, jitter) {
