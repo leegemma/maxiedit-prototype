@@ -6,7 +6,8 @@
 
 | 날짜 | 커밋 | 요약 |
 |---|---|---|
-| 2026-07-07 | (this commit) | 테두리 그리기 버그 3종 수정 — 로딩 표시 즉시 노출(파일 선택 즉시), BodyPix DOM 임시 연결로 outline 감지 안되던 문제 해결, 별 데코 초기값 0으로(슬라이더 조작 후에만 생성) |
+| 2026-07-07 | (this commit) | 테두리 감지 근본 수정 — 원본 사진(12MP+)을 640px로 다운샘플 후 BodyPix 투입(모바일 GPU 메모리 초과 방지), 감지 실패 시 전체 이미지 테두리 fallback 자동 적용 |
+| 2026-07-07 | ced3ce2 | 테두리 그리기 버그 3종 수정 — 로딩 표시 즉시 노출(파일 선택 즉시), BodyPix DOM 임시 연결로 outline 감지 안되던 문제 해결, 별 데코 초기값 0으로(슬라이더 조작 후에만 생성) |
 | 2026-07-06 | 816654e | 테두리 그리기 기능 추가 — TF.js BodyPix 인물 감지, 손그림 외곽선(실선/점선), 별 데코, 손글씨 텍스트, 내보내기 |
 | 2026-05-13 | (this commit) | **Claude Code slash commands 5종** — 반복 작업 단축어. `/sync` (www/ 새로고침), `/apk` (debug APK 빌드+Palma 설치+실행 6단계 한 방), `/release` (서명된 .aab + jarsigner 검증), `/ship <메시지>` (commit + push + cache-buster URL 보고, HISTORY.md 자동 갱신 포함), `/status` (git status + 최근 커밋 + 출시 진행 상황 요약). 모두 `.claude/commands/*.md`로 커밋 — 프로젝트 자체에 단축어가 같이 다님 |
 | 2026-05-13 | (prev) | **Claude Code hooks 배선** — 반복 작업 자동화 4종. (1) PostToolUse on Edit/Write/MultiEdit → `index.html` 수정 시 `.claude/hooks/sync-on-index-edit.sh`가 자동 `sync:www` 실행, "📦 www/ synced" systemMessage 출력. (2) PostToolUse on Bash → 커맨드에 `git commit` 포함 시 `cache-buster-after-commit.sh`가 `scripts/check-cachebuster.sh` 돌려서 `?v=N` 공유 URL 알림. (3) Stop → PowerShell `[console]::beep` 두 번 (900Hz/1200Hz × 150ms) — 매 턴 종료 시 청각 알림. (4) PreToolUse on Edit/Write/MultiEdit → `protect-keystore.sh`가 `*.keystore`/`*.jks`/`*keystore.properties` 경로 차단 (deny decision). 모든 스크립트는 `node -e`로 JSON 파싱(jq 미설치 환경 대응), non-matching 경로엔 silent exit. CLAUDE.md "Hooks" 섹션 + `.claude/hooks/README.md` 신설 |

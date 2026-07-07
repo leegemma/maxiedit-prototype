@@ -4659,55 +4659,65 @@
       outlineState.canvasScale = scale;
     }
 
+    function applyFullImageFallbackMask() {
+      const { imgW, imgH } = outlineState;
+      const segW = Math.min(imgW, 320), segH = Math.min(imgH, 320);
+      const mask = new Uint8Array(segW * segH).fill(1);
+      outlineState.masks = [mask];
+      outlineState.maskW = segW;
+      outlineState.maskH = segH;
+      outlineState.selectedPersons = [0];
+      outlineState.contourCache = null;
+    }
+
     async function runOutlineSegmentation(img) {
       const loadingEl = document.getElementById('outline-loading');
-      // Temporarily attach to DOM so WebGL can create a texture from the image
-      const tmpStyle = 'position:fixed;top:0;left:0;opacity:0.001;pointer-events:none;z-index:-9999;width:1px;height:1px;';
-      img.style.cssText = tmpStyle;
-      document.body.appendChild(img);
       try {
         const net = await getBodyPix();
-        if (!net) { showToast('인물 감지 모델 로드 실패', { showIcon: false }); return; }
+        if (!net) {
+          showToast('인물 감지 모델 로드 실패', { showIcon: false });
+          applyFullImageFallbackMask(); renderOutline(); return;
+        }
 
-        let masks = [], maskW = 0, maskH = 0;
+        // Down-sample to max 640px before segmentation — full-res photos exhaust mobile GPU
+        const MAX_SEG = 640;
+        const ratio = Math.min(1, MAX_SEG / Math.max(img.naturalWidth, img.naturalHeight));
+        const segW = Math.round(img.naturalWidth * ratio);
+        const segH = Math.round(img.naturalHeight * ratio);
+        const segCanvas = document.createElement('canvas');
+        segCanvas.width = segW; segCanvas.height = segH;
+        segCanvas.getContext('2d').drawImage(img, 0, 0, segW, segH);
 
-        // Try multi-person first
+        let masks = [], maskW = segW, maskH = segH;
+
         try {
-          const result = await net.segmentMultiPerson(img, {
-            flipHorizontal: false,
-            internalResolution: 'low',
-            segmentationThreshold: 0.5,
-            maxDetections: 5,
-            scoreThreshold: 0.1,
-            nmsRadius: 20,
+          const result = await net.segmentMultiPerson(segCanvas, {
+            flipHorizontal: false, internalResolution: 'low',
+            segmentationThreshold: 0.5, maxDetections: 5,
+            scoreThreshold: 0.1, nmsRadius: 20,
           });
           const valid = result.filter(r => r.data.some(v => v));
           if (valid.length > 0) {
             masks = valid.map(r => r.data);
-            maskW = valid[0].width;
-            maskH = valid[0].height;
+            maskW = valid[0].width; maskH = valid[0].height;
           }
-        } catch (e) {
-          console.warn('segmentMultiPerson failed, trying segmentPerson:', e);
-        }
+        } catch (e) { console.warn('segmentMultiPerson failed:', e); }
 
-        // Fallback to single-person segmentation
         if (masks.length === 0) {
-          const seg = await net.segmentPerson(img, {
-            flipHorizontal: false,
-            internalResolution: 'low',
-            segmentationThreshold: 0.5,
-          });
-          if (seg.data.some(v => v)) {
-            masks = [seg.data];
-            maskW = seg.width;
-            maskH = seg.height;
-          }
+          try {
+            const seg = await net.segmentPerson(segCanvas, {
+              flipHorizontal: false, internalResolution: 'low',
+              segmentationThreshold: 0.5,
+            });
+            if (seg.data.some(v => v)) {
+              masks = [seg.data]; maskW = seg.width; maskH = seg.height;
+            }
+          } catch (e) { console.warn('segmentPerson failed:', e); }
         }
 
         outlineState.masks = masks;
-        outlineState.maskW = maskW || img.naturalWidth;
-        outlineState.maskH = maskH || img.naturalHeight;
+        outlineState.maskW = maskW;
+        outlineState.maskH = maskH;
         outlineState.selectedPersons = masks.map((_, i) => i);
         outlineState.contourCache = null;
         updateOutlinePersonToggles();
@@ -4717,15 +4727,15 @@
           renderOutline();
           setTimeout(() => { outlineState.showGuidelines = false; renderOutline(); }, 1600);
         } else {
-          showToast('인물을 찾지 못했습니다. 사진 속 인물이 잘 보이는지 확인해주세요.', { showIcon: false });
+          showToast('인물을 찾지 못해 전체 테두리를 적용했어요', { showIcon: false });
+          applyFullImageFallbackMask(); renderOutline();
         }
       } catch (err) {
         console.error('BodyPix error', err);
-        showToast('인물 감지 실패 — 다시 시도해주세요.', { showIcon: false });
+        showToast('인물 감지 실패 — 전체 테두리를 적용했어요', { showIcon: false });
+        applyFullImageFallbackMask(); renderOutline();
       } finally {
         loadingEl.hidden = true;
-        if (img.parentNode === document.body) document.body.removeChild(img);
-        img.style.cssText = '';
       }
     }
 
