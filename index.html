@@ -4996,11 +4996,12 @@
     }
 
     function drawCrayonTexture(ctx, pts, color, lw) {
-      // Crayon side-press look: 3 wide parallel bands along the path,
-      // each drawn as broken segments with rough edges — like dragging
-      // a crayon on its side across paper.
+      // Crayon side-press: thick solid bands + paper-grain holes punched out.
+      // Step 1 — draw 3 wide opaque-ish bands onto a temp canvas.
+      // Step 2 — destination-out: scatter small ellipses to expose "paper" underneath.
+      // Step 3 — rough edges: erase irregular chunks at each band boundary.
 
-      // Dense bezier sampling (~3px interval)
+      // Dense bezier sampling (~3 px intervals)
       const sampled = [];
       const N = pts.length;
       for (let i = 0; i < N; i++) {
@@ -5016,53 +5017,98 @@
       }
       if (!sampled.length) return;
 
-      ctx.save();
-      ctx.strokeStyle = color;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
+      // Perpendicular unit vector at sample index j
+      const perpVec = (j) => {
+        const jn = Math.min(j + 1, sampled.length - 1);
+        const edx = sampled[jn][0] - sampled[j][0];
+        const edy = sampled[jn][1] - sampled[j][1];
+        const elen = Math.hypot(edx, edy) || 1;
+        return [-edy / elen, edx / elen];
+      };
 
-      // Each band is offset perpendicularly; gap between bands ~= bandW
-      const bandW = Math.max(7, lw * 2.8);
-      const bandOffsets = [-1.05, 0, 1.05]; // in units of bandW
+      // Work on an isolated canvas so destination-out only affects this stroke
+      const tmp = document.createElement('canvas');
+      tmp.width = ctx.canvas.width; tmp.height = ctx.canvas.height;
+      const tc = tmp.getContext('2d');
 
-      for (const mult of bandOffsets) {
-        const baseOffset = mult * bandW;
+      const bandW = Math.max(10, lw * 4);
+      // Three bands — slightly uneven spacing feels more hand-drawn
+      const bands = [
+        { off: -1.1  * bandW, wFactor: 0.82 },
+        { off:  0,            wFactor: 1.0  },
+        { off:  0.95 * bandW, wFactor: 0.85 },
+      ];
 
+      // ── Step 1: solid base bands ──────────────────────────────────────────
+      tc.strokeStyle = color;
+      tc.lineCap = 'round'; tc.lineJoin = 'round';
+
+      for (const { off, wFactor } of bands) {
         let i = 0;
         while (i < sampled.length) {
-          // 12% chance of a gap (paper showing through)
-          if (Math.random() < 0.12) {
-            i += 1 + Math.floor(Math.random() * 5);
-            continue;
-          }
-
-          const segLen = 10 + Math.floor(Math.random() * 20);
-          ctx.globalAlpha = 0.5 + Math.random() * 0.35;
-          ctx.lineWidth  = bandW * (0.55 + Math.random() * 0.6);
-
-          ctx.beginPath();
+          const chunkLen = 14 + Math.floor(Math.random() * 18);
+          const end = Math.min(i + chunkLen, sampled.length);
+          tc.globalAlpha = 0.72 + Math.random() * 0.18;
+          tc.lineWidth   = bandW * wFactor * (0.85 + Math.random() * 0.3);
+          tc.beginPath();
           let started = false;
-          const end = Math.min(i + segLen, sampled.length);
-
           for (let j = i; j < end; j++) {
             const [x, y] = sampled[j];
-            const jn = Math.min(j + 1, sampled.length - 1);
-            const edx = sampled[jn][0] - x, edy = sampled[jn][1] - y;
-            const elen = Math.hypot(edx, edy) || 1;
-            const perpX = -edy / elen, perpY = edx / elen;
-            // Small wobble gives rough edge
-            const wobble = (Math.random() - 0.5) * bandW * 0.35;
-            const ox = x + perpX * (baseOffset + wobble);
-            const oy = y + perpY * (baseOffset + wobble);
-            if (!started) { ctx.moveTo(ox, oy); started = true; }
-            else ctx.lineTo(ox, oy);
+            const [px, py] = perpVec(j);
+            const wobble = (Math.random() - 0.5) * bandW * 0.18;
+            const ox = x + px * (off + wobble);
+            const oy = y + py * (off + wobble);
+            if (!started) { tc.moveTo(ox, oy); started = true; }
+            else tc.lineTo(ox, oy);
           }
-          ctx.stroke();
-          i += segLen;
+          tc.stroke();
+          i += chunkLen;
         }
       }
 
-      ctx.restore();
+      // ── Step 2: paper-grain holes (destination-out) ───────────────────────
+      tc.globalCompositeOperation = 'destination-out';
+      const totalSpread = bandW * 2.05;
+
+      for (let j = 0; j < sampled.length; j += 2) {
+        const [x, y] = sampled[j];
+        const [px, py] = perpVec(j);
+        const numGrains = 2 + Math.floor(Math.random() * 4);
+        for (let g = 0; g < numGrains; g++) {
+          const perpOff = (Math.random() - 0.5) * totalSpread;
+          const gx = x + px * perpOff;
+          const gy = y + py * perpOff;
+          const rA = 0.8 + Math.random() * 2.8;
+          const rB = 0.4 + Math.random() * 1.4;
+          const angle = Math.random() * Math.PI;
+          tc.globalAlpha = 0.22 + Math.random() * 0.38;
+          tc.beginPath();
+          tc.ellipse(gx, gy, rA, rB, angle, 0, 6.283);
+          tc.fill();
+        }
+      }
+
+      // ── Step 3: rough band edges (destination-out larger bites) ───────────
+      for (const { off } of bands) {
+        for (const side of [-0.52, 0.52]) {
+          const edgeOff = off + side * bandW;
+          let j = 0;
+          while (j < sampled.length) {
+            if (Math.random() > 0.35) { j++; continue; }
+            const [x, y] = sampled[j];
+            const [px, py] = perpVec(j);
+            const r = bandW * (0.12 + Math.random() * 0.22);
+            tc.globalAlpha = 0.45 + Math.random() * 0.45;
+            tc.beginPath();
+            tc.arc(x + px * edgeOff, y + py * edgeOff, r, 0, 6.283);
+            tc.fill();
+            j += 1 + Math.floor(Math.random() * 3);
+          }
+        }
+      }
+
+      // Composite onto main canvas
+      ctx.drawImage(tmp, 0, 0);
     }
 
     function genStarPositions() {
