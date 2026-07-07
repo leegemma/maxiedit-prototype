@@ -4692,7 +4692,7 @@
 
         try {
           const result = await net.segmentMultiPerson(segCanvas, {
-            flipHorizontal: false, internalResolution: 'low',
+            flipHorizontal: false, internalResolution: 'medium',
             segmentationThreshold: 0.5, maxDetections: 5,
             scoreThreshold: 0.1, nmsRadius: 20,
           });
@@ -4706,7 +4706,7 @@
         if (masks.length === 0) {
           try {
             const seg = await net.segmentPerson(segCanvas, {
-              flipHorizontal: false, internalResolution: 'low',
+              flipHorizontal: false, internalResolution: 'medium',
               segmentationThreshold: 0.5,
             });
             if (seg.data.some(v => v)) {
@@ -4800,27 +4800,36 @@
     }
 
     function buildContourPts(mask, mW, mH, cW, cH, jitter) {
-      const sx = cW / mW, sy = cH / mH;
-      const leftEdge = [], rightEdge = [];
+      const scaleX = cW / mW, scaleY = cH / mH;
+
+      // Collect actual boundary pixels (foreground with ≥1 background 4-neighbor)
+      const edge = [];
       for (let y = 0; y < mH; y++) {
-        let l = -1, r = -1;
         for (let x = 0; x < mW; x++) {
-          if (mask[y * mW + x]) { if (l < 0) l = x; r = x; }
-        }
-        if (l >= 0) {
-          leftEdge.push([l, y]);
-          if (r > l) rightEdge.unshift([r, y]);
+          if (!mask[y * mW + x]) continue;
+          if (x === 0 || !mask[y * mW + (x - 1)] ||
+              x === mW - 1 || !mask[y * mW + (x + 1)] ||
+              y === 0 || !mask[(y - 1) * mW + x] ||
+              y === mH - 1 || !mask[(y + 1) * mW + x]) {
+            edge.push([x, y]);
+          }
         }
       }
-      if (!leftEdge.length) return [];
-      const raw = [...leftEdge, ...rightEdge];
-      const step = Math.max(1, Math.ceil(raw.length / 110));
+      if (!edge.length) return [];
+
+      // Sort by angle from centroid so points form a traversable closed loop
+      let sumX = 0, sumY = 0;
+      for (const [x, y] of edge) { sumX += x; sumY += y; }
+      const cx = sumX / edge.length, cy = sumY / edge.length;
+      edge.sort((a, b) => Math.atan2(a[1] - cy, a[0] - cx) - Math.atan2(b[1] - cy, b[0] - cx));
+
+      const step = Math.max(1, Math.ceil(edge.length / 200));
       const pts = [];
-      for (let i = 0; i < raw.length; i += step) {
-        const [x, y] = raw[i];
+      for (let i = 0; i < edge.length; i += step) {
+        const [x, y] = edge[i];
         const jx = jitter ? (Math.random() - 0.5) * jitter * 2 : 0;
         const jy = jitter ? (Math.random() - 0.5) * jitter * 2 : 0;
-        pts.push([(x + jx) * sx, (y + jy) * sy]);
+        pts.push([(x + jx) * scaleX, (y + jy) * scaleY]);
       }
       return pts;
     }

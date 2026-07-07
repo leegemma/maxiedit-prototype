@@ -6,7 +6,8 @@
 
 | 날짜 | 커밋 | 요약 |
 |---|---|---|
-| 2026-07-07 | (this commit) | 테두리 감지 근본 수정 — 원본 사진(12MP+)을 640px로 다운샘플 후 BodyPix 투입(모바일 GPU 메모리 초과 방지), 감지 실패 시 전체 이미지 테두리 fallback 자동 적용 |
+| 2026-07-07 | (this commit) | 테두리 윤곽 정확도 개선 — row-scan → 실제 경계 픽셀 탐지+각도 정렬 방식으로 교체(오목부분 누락 해결), internalResolution low→medium으로 상향 |
+| 2026-07-07 | 453d863 | 테두리 감지 근본 수정 — 원본 사진(12MP+)을 640px로 다운샘플 후 BodyPix 투입(모바일 GPU 메모리 초과 방지), 감지 실패 시 전체 이미지 테두리 fallback 자동 적용 |
 | 2026-07-07 | ced3ce2 | 테두리 그리기 버그 3종 수정 — 로딩 표시 즉시 노출(파일 선택 즉시), BodyPix DOM 임시 연결로 outline 감지 안되던 문제 해결, 별 데코 초기값 0으로(슬라이더 조작 후에만 생성) |
 | 2026-07-06 | 816654e | 테두리 그리기 기능 추가 — TF.js BodyPix 인물 감지, 손그림 외곽선(실선/점선), 별 데코, 손글씨 텍스트, 내보내기 |
 | 2026-05-13 | (this commit) | **Claude Code slash commands 5종** — 반복 작업 단축어. `/sync` (www/ 새로고침), `/apk` (debug APK 빌드+Palma 설치+실행 6단계 한 방), `/release` (서명된 .aab + jarsigner 검증), `/ship <메시지>` (commit + push + cache-buster URL 보고, HISTORY.md 자동 갱신 포함), `/status` (git status + 최근 커밋 + 출시 진행 상황 요약). 모두 `.claude/commands/*.md`로 커밋 — 프로젝트 자체에 단축어가 같이 다님 |
