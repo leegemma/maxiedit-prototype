@@ -2148,9 +2148,9 @@
         <p class="outline-section-label">별 개수</p>
         <div class="outline-slider-row">
           <span class="outline-slider-label">0</span>
-          <input type="range" class="outline-slider" id="outline-star-count" min="0" max="30" value="12">
+          <input type="range" class="outline-slider" id="outline-star-count" min="0" max="30" value="0">
           <span class="outline-slider-label">30</span>
-          <span class="outline-slider-val" id="outline-star-val">12</span>
+          <span class="outline-slider-val" id="outline-star-val">0</span>
         </div>
         <button class="btn-deco-re" type="button" id="btn-stars-randomize">
           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
@@ -4488,7 +4488,7 @@
       selectedPersons: [],
       lineStyle: 'solid',
       lineColor: '#FFE600',
-      stars: [], starCount: 12,
+      stars: [], starCount: 0,
       textItems: [],
       activeFont: 'Caveat',
       activeTextColor: '#FFE600',
@@ -4619,13 +4619,17 @@
       ['border', 'deco', 'text'].forEach(n => { document.getElementById(`outline-panel-${n}`).hidden = n !== 'border'; });
       document.querySelectorAll('.btn-line-style[data-style]').forEach(b => b.classList.toggle('is-active', b.dataset.style === 'solid'));
       document.querySelectorAll('#outline-colors .color-swatch').forEach((s, i) => s.classList.toggle('is-active', i === 0));
-      document.getElementById('outline-star-count').value = 12;
-      document.getElementById('outline-star-val').textContent = '12';
+      document.getElementById('outline-star-count').value = 0;
+      document.getElementById('outline-star-val').textContent = '0';
       goTo('outline');
       document.getElementById('outline-photo-input').click();
     }
 
     async function loadOutlineFile(file) {
+      const loadingEl = document.getElementById('outline-loading');
+      const loadingText = loadingEl.querySelector('.outline-loading-text');
+      loadingText.textContent = '사진 불러오는 중...';
+      loadingEl.hidden = false;
       const url = URL.createObjectURL(file);
       const img = new Image();
       img.onload = async () => {
@@ -4635,9 +4639,10 @@
         outlineState.imgH = img.naturalHeight;
         setupOutlineCanvas();
         renderOutline();
+        loadingText.textContent = '인물 감지 중...';
         await runOutlineSegmentation(img);
       };
-      img.onerror = () => URL.revokeObjectURL(url);
+      img.onerror = () => { URL.revokeObjectURL(url); loadingEl.hidden = true; };
       img.src = url;
     }
 
@@ -4656,34 +4661,71 @@
 
     async function runOutlineSegmentation(img) {
       const loadingEl = document.getElementById('outline-loading');
-      loadingEl.hidden = false;
+      // Temporarily attach to DOM so WebGL can create a texture from the image
+      const tmpStyle = 'position:fixed;top:0;left:0;opacity:0.001;pointer-events:none;z-index:-9999;width:1px;height:1px;';
+      img.style.cssText = tmpStyle;
+      document.body.appendChild(img);
       try {
         const net = await getBodyPix();
         if (!net) { showToast('인물 감지 모델 로드 실패', { showIcon: false }); return; }
-        const result = await net.segmentMultiPerson(img, {
-          flipHorizontal: false,
-          internalResolution: 'medium',
-          segmentationThreshold: 0.6,
-          maxDetections: 5,
-          scoreThreshold: 0.2,
-          nmsRadius: 20,
-        });
-        const valid = result.filter(r => r.score > 0.3 && r.data.some(v => v));
-        outlineState.masks = valid.map(r => r.data);
-        outlineState.maskW = valid[0]?.width || img.naturalWidth;
-        outlineState.maskH = valid[0]?.height || img.naturalHeight;
-        outlineState.selectedPersons = outlineState.masks.map((_, i) => i);
+
+        let masks = [], maskW = 0, maskH = 0;
+
+        // Try multi-person first
+        try {
+          const result = await net.segmentMultiPerson(img, {
+            flipHorizontal: false,
+            internalResolution: 'low',
+            segmentationThreshold: 0.5,
+            maxDetections: 5,
+            scoreThreshold: 0.1,
+            nmsRadius: 20,
+          });
+          const valid = result.filter(r => r.data.some(v => v));
+          if (valid.length > 0) {
+            masks = valid.map(r => r.data);
+            maskW = valid[0].width;
+            maskH = valid[0].height;
+          }
+        } catch (e) {
+          console.warn('segmentMultiPerson failed, trying segmentPerson:', e);
+        }
+
+        // Fallback to single-person segmentation
+        if (masks.length === 0) {
+          const seg = await net.segmentPerson(img, {
+            flipHorizontal: false,
+            internalResolution: 'low',
+            segmentationThreshold: 0.5,
+          });
+          if (seg.data.some(v => v)) {
+            masks = [seg.data];
+            maskW = seg.width;
+            maskH = seg.height;
+          }
+        }
+
+        outlineState.masks = masks;
+        outlineState.maskW = maskW || img.naturalWidth;
+        outlineState.maskH = maskH || img.naturalHeight;
+        outlineState.selectedPersons = masks.map((_, i) => i);
         outlineState.contourCache = null;
         updateOutlinePersonToggles();
-        genStarPositions();
-        outlineState.showGuidelines = true;
-        renderOutline();
-        setTimeout(() => { outlineState.showGuidelines = false; renderOutline(); }, 1600);
+
+        if (masks.length > 0) {
+          outlineState.showGuidelines = true;
+          renderOutline();
+          setTimeout(() => { outlineState.showGuidelines = false; renderOutline(); }, 1600);
+        } else {
+          showToast('인물을 찾지 못했습니다. 사진 속 인물이 잘 보이는지 확인해주세요.', { showIcon: false });
+        }
       } catch (err) {
         console.error('BodyPix error', err);
-        showToast('인물 감지 실패 — 이미지 전체에 테두리를 적용합니다.', { showIcon: false });
+        showToast('인물 감지 실패 — 다시 시도해주세요.', { showIcon: false });
       } finally {
         loadingEl.hidden = true;
+        if (img.parentNode === document.body) document.body.removeChild(img);
+        img.style.cssText = '';
       }
     }
 
